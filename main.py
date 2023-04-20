@@ -1,14 +1,24 @@
-import requests
 import tweepy
+import requests
 import random
 from datetime import datetime
 
+ACCESS_TOKEN = "1634000831333945345-ZH0vNkWDUPqx9SZiOp9soIOs7iSNfp"
+ACCESS_TOKEN_SECRET = "4KEDaHbVr5H7BsRNw1O85504qyUoaTsg1pyWgcBJcq1kA"
+BEARER_ROKEN = "AAAAAAAAAAAAAAAAAAAAAFhfmwEAAAAATyAphLi3SovuWwZzcsnbCXFLEbc%3D2hYsX3Dw9SifGD4AYEEoPsNK0rCCChvyouIgF6vFMglaP0CSyS"
+API_KEY = "IadvsrqNGoG34IrLk1C989Egz"
+API_KEY_SECRET = "NwiPh0h4CiLpAC9eVXiroHJPM0tEKqmMtHnUefZBgAk7rkNcqT"
+
 # Authenticate to Twitter
-auth = tweepy.OAuthHandler("consumer_key", "consumer_secret")
-auth.set_access_token("access_token", "access_token_secret")
+auth = tweepy.OAuth1UserHandler(
+    API_KEY,
+    API_KEY_SECRET,
+    ACCESS_TOKEN,
+    ACCESS_TOKEN_SECRET
+)
 
 # Create API object
-api = tweepy.API(auth)
+api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
 # Page
 page = 1
@@ -30,3 +40,4 @@ api.update_status(tweet)
 # Print a message to confirm the tweet was sent
 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 print(f"Tweet sent at {now}: {tweet}")
+
