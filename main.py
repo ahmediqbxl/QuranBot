@@ -3,40 +3,24 @@ import json
 import requests
 from datetime import datetime
 
-ACCESS_TOKEN = "1634000831333945345-ZH0vNkWDUPqx9SZiOp9soIOs7iSNfp"
-ACCESS_TOKEN_SECRET = "4KEDaHbVr5H7BsRNw1O85504qyUoaTsg1pyWgcBJcq1kA"
-BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAFhfmwEAAAAATyAphLi3SovuWwZzcsnbCXFLEbc%3D2hYsX3Dw9SifGD4AYEEoPsNK0rCCChvyouIgF6vFMglaP0CSyS"
-API_KEY = "IadvsrqNGoG34IrLk1C989Egz"
-API_KEY_SECRET = "NwiPh0h4CiLpAC9eVXiroHJPM0tEKqmMtHnUefZBgAk7rkNcqT"
+with open('secrets.json', 'r') as json_file:
+    data = json.load(json_file)
 
-# Set up the API endpoint
-url_twitter = "https://api.twitter.com/2/tweets"
+ACCESS_TOKEN = data.get('ACCESS_TOKEN')
+ACCESS_TOKEN_SECRET = data.get('ACCESS_TOKEN_SECRET')
+BEARER_TOKEN = data.get('BEARER_TOKEN')
+API_KEY = data.get('API_KEY')
+API_KEY_SECRET = data.get('API_KEY_SECRET')
+CLIENT_ID = data.get('CLIENT_ID')
+CLIENT_SECRET = data.get('CLIENT_SECRET')
 
-# Set up the authentication headers
-headers = {
-    "Authorization": f"Bearer {BEARER_TOKEN}",
-    "User-Agent": "v2FilteredStreamPython"
-}
-
-# Authenticate to Twitter
-auth = tweepy.OAuthHandler(
-    API_KEY,
-    API_KEY_SECRET
-)
-auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-
-# Create API object
-api = tweepy.API(auth, wait_on_rate_limit=True)
-
-# Page
+username = 'Quran4Soul'
 page = 1
 
 # Get a verse from the Quran API
 url_english = f"http://api.alquran.cloud/v1/page/{page}/en.asad"
 url_arabic = f"http://api.alquran.cloud/v1/page/{page}/quran-uthmani"
 response = requests.get(url_english)
-
-# print(response.content) # print the content of the response
 
 json_data = json.loads(response.text)
 
@@ -48,19 +32,45 @@ surah_english = json_data['data']['ayahs'][0]['surah']['englishName']
 
 number = json_data['data']['number']
 
-print(text, ' Surah: ', surah, ' ', surah_english, ' Page Number: ', number) 
+print(text, ' ', surah, surah_english, ' Page: ', number) 
 
-tweet_text = f"{text} ({surah} {number})"
+tweet_text = f"{text} ({surah}, {surah_english}, Page {number})"
 
-# Set up the tweet parameters
-params = {
-    "text": tweet_text
-}
+auth = tweepy.OAuthHandler(
+        API_KEY, API_KEY_SECRET
+        )
+auth.set_access_token(
+        ACCESS_TOKEN, ACCESS_TOKEN_SECRET
+        )
+api = tweepy.API(auth)
 
-# Send the tweet
-response = requests.post(url_twitter, headers=headers, params=params)
+def send_tweet(tweet_body, in_reply_to_status_id=None):
+    try:
+        status = api.update_status(status=tweet_body, in_reply_to_status_id=in_reply_to_status_id)
+        print("Tweet successfully posted!")
+    except Exception as e:
+        print("Error posting tweet:", e)
 
-# Print a message to confirm the tweet was sent
-now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-print(f"Tweet sent at {now}: {tweet_text}")
+    return status 
+
+
+# Check if the tweet text is longer than 280 characters (the current Twitter character limit)
+if len(tweet_text) > 280:
+
+    # Split the tweet text into two parts
+    tweet_part1 = tweet_text[:280]
+    tweet_part2 = tweet_text[280:] 
+
+    # Post the first tweet
+    tweet1 = api.update_status(tweet_part1)
+
+    # Post the second tweet as a reply to the first one
+    tweet2 = api.update_status(tweet_part2, in_reply_to_status_id=tweet1.id_str)
+
+else:
+
+    # If the tweet text is less than or equal to 280 characters, just post a single tweet
+    api.update_status(tweet_text)
+
+
 
