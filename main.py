@@ -1,8 +1,7 @@
 import os
 import tweepy
 import json
-import requests
-from datetime import datetime
+from security import safe_requests
 
 def setup_credentials():
     with open('secrets.json', 'r') as json_file:
@@ -40,7 +39,7 @@ def retrieve_text(page):
     # Get a verse from the Quran API
     url_english = f"http://api.alquran.cloud/v1/page/{page}/en.asad"
     url_arabic = f"http://api.alquran.cloud/v1/page/{page}/quran-uthmani"
-    response = requests.get(url_english)
+    response = safe_requests.get(url_english)
 
     json_data = json.loads(response.text)
 
